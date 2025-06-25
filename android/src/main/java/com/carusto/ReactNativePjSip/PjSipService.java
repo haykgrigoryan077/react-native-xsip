@@ -132,22 +132,30 @@ public class PjSipService extends Service {
         return mEmitter;
     }
 
+    @Override
     public void onCreate() {
         super.onCreate();
-        // String channelId = "";
-        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        //     channelId = "com.joluz.joluzapp";
-        //     String channelName = "My Background Service";
-        //     NotificationChannel chan = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_NONE);
-        //     chan.setLightColor(Color.BLUE);
-        //     chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-        //     NotificationManager service = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        //     service.createNotificationChannel(chan);
-        // }
-        // Notification notification = new NotificationCompat.Builder(this, channelId).setSmallIcon(R.drawable.ic_notif)
-        //         .setContentTitle("Reachify").setContentText("Online").build();
 
-        // startForeground(1337, notification);
+        String channelId = "";
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            channelId = "com.joluz.joluzapp";
+            String channelName = "My Background Service";
+            NotificationChannel chan = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW); // NOT NONE
+            chan.setLightColor(Color.BLUE);
+            chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            NotificationManager service = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            service.createNotificationChannel(chan);
+        } else {
+            channelId = "default";
+        }
+
+        Notification notification = new NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(R.drawable.ic_notif)
+                .setContentTitle("SIP Service")
+                .setContentText("SIP is running")
+                .build();
+
+        startForeground(1337, notification);
     }
 
     public void onTaskRemoved(Intent rootIntent) {

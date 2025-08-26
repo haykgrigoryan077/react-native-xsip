@@ -203,7 +203,7 @@
     return account;
 }
 
-- (void)deleteAccount:(int) accountId {
+- (void)deleteAccount:(int)accountId {
     NSLog(@"[XSIP] Attempting to delete account: %d", accountId);
 
     if (self.accounts[@(accountId)] == nil) {
@@ -213,21 +213,33 @@
 
     if (pjsua_acc_is_valid(accountId)) {
         NSLog(@"[XSIP] Account %d is valid. Unregistering...", accountId);
-
-        pj_status_t status1 = pjsua_acc_set_registration(accountId, PJ_FALSE);
-        NSLog(@"[XSIP] Unregister status for %d: %d", accountId, status1);
-
-        pj_thread_sleep(200);
-
         pj_status_t status2 = pjsua_acc_del(accountId);
-        NSLog(@"[XSIP] Deletion status for %d: %d", accountId, status2);
+        if (status2 != PJ_SUCCESS) {
+            char err_msg[PJ_ERR_MSG_SIZE];
+            pj_strerror(status2, err_msg, sizeof(err_msg));
+            NSLog(@"[XSIP] Failed to delete account %d: %s", accountId, err_msg);
+            return;
+        }
+        NSLog(@"[XSIP] Safe deletion (with auto-unregister) for %d: %d", accountId, status2);
     } else {
         NSLog(@"[XSIP] Account %d is NOT valid. Skipping unregister.", accountId);
     }
 
     [self.accounts removeObjectForKey:@(accountId)];
     NSLog(@"[XSIP] Removed account %d from internal map", accountId);
+
+    // 👇 Shutdown SIP completely
+    NSLog(@"[XSIP] Shutting down SIP endpoint via pjsua_destroy()");
+    pj_status_t shutdownStatus = pjsua_destroy();
+    if (shutdownStatus != PJ_SUCCESS) {
+        char err_msg[PJ_ERR_MSG_SIZE];
+        pj_strerror(shutdownStatus, err_msg, sizeof(err_msg));
+        NSLog(@"[XSIP] Failed to shut down SIP: %s", err_msg);
+    } else {
+        NSLog(@"[XSIP] SIP shutdown successful.");
+    }
 }
+
 
 - (PjSipAccount *) findAccount: (int) accountId {
     NSLog(@"%@", [NSString stringWithFormat: @"FINDING ACCOUNT WITH ID: %d", accountId]);

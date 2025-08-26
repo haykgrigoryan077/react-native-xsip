@@ -135,11 +135,6 @@
     return self;
 }
 
-- (void) dealloc {
-    pjsua_acc_set_registration(self.id, PJ_FALSE);
-    pjsua_acc_del(self.id);
-}
-
 - (void) register: (bool) renew {
     pj_status_t status = pjsua_acc_set_registration((pjsua_acc_id)self.id, renew ? PJ_TRUE : PJ_FALSE);
     if (status != PJ_SUCCESS) {

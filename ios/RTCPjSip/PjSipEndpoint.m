@@ -150,7 +150,12 @@
     return self;
 }
 
-- (NSDictionary *)start: (NSDictionary *)config {
+- (NSDictionary *)start:(NSDictionary *)config {
+    if (pjsua_get_state() == PJSUA_STATE_NULL) {
+        NSLog(@"[XSIP] PJSUA is not initialized. Reinitializing...");
+        [[PjSipEndpoint alloc] init];
+    }
+
     NSMutableArray *accountsResult = [[NSMutableArray alloc] initWithCapacity:[@([self.accounts count]) unsignedIntegerValue]];
     NSMutableArray *callsResult = [[NSMutableArray alloc] initWithCapacity:[@([self.calls count]) unsignedIntegerValue]];
     NSDictionary *settingsResult = @{ @"codecs": [self getCodecs] };
@@ -159,21 +164,22 @@
         PjSipAccount *acc = self.accounts[key];
         [accountsResult addObject:[acc toJsonDictionary]];
     }
-    
+
     for (NSString *key in self.calls) {
         PjSipCall *call = self.calls[key];
         [callsResult addObject:[call toJsonDictionary:self.isSpeaker]];
     }
-    
+
     if ([accountsResult count] > 0 && config[@"service"] && config[@"service"][@"stun"]) {
         for (NSDictionary *account in accountsResult) {
             int accountId = account[@"_data"][@"id"];
             [[PjSipEndpoint instance] updateStunServers:accountId stunServerList:config[@"service"][@"stun"]];
         }
     }
-    
+
     return @{@"accounts": accountsResult, @"calls": callsResult, @"settings": settingsResult, @"connectivity": @YES};
 }
+
 
 - (void)updateStunServers:(int)accountId stunServerList:(NSArray *)stunServerList {
     int size = [stunServerList count];

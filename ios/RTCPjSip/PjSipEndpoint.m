@@ -193,8 +193,11 @@
     pjsua_acc_config cfg_update;
     pj_pool_t *pool = pjsua_pool_create("tmp-pjsua", 1000, 1000);
     pjsua_acc_config_default(&cfg_update);
-    pjsua_acc_get_config(accountId, pool, &cfg_update);
-    NSLog(@"%@", [NSString stringWithFormat: @"I AM ACC ID: %d", accountId]);
+    if (!pjsua_acc_is_valid(accountId)) {
+        NSLog(@"[XSIP] Cannot update STUN servers: account ID %d is not valid", accountId);
+        return;
+    }
+    pjsua_acc_get_config(accountId, pool, &cfg_update);    NSLog(@"%@", [NSString stringWithFormat: @"I AM ACC ID: %d", accountId]);
     pjsua_update_stun_servers(size, srv, false);
     
     pjsua_acc_modify(accountId, &cfg_update);
@@ -237,6 +240,8 @@
     // 👇 Shutdown SIP completely
     NSLog(@"[XSIP] Shutting down SIP endpoint via pjsua_destroy()");
     pj_status_t shutdownStatus = pjsua_destroy();
+    [self.accounts removeAllObjects];
+    [self.calls removeAllObjects];
     if (shutdownStatus != PJ_SUCCESS) {
         char err_msg[PJ_ERR_MSG_SIZE];
         pj_strerror(shutdownStatus, err_msg, sizeof(err_msg));
@@ -249,6 +254,10 @@
 
 - (PjSipAccount *) findAccount: (int) accountId {
     NSLog(@"%@", [NSString stringWithFormat: @"FINDING ACCOUNT WITH ID: %d", accountId]);
+    if (!pjsua_acc_is_valid(accountId)) {
+        NSLog(@"[XSIP] Account %d is not valid (probably removed)", accountId);
+        return nil;
+    }
     return self.accounts[@(accountId)];
 }
 

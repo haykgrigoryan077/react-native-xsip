@@ -197,17 +197,36 @@
 - (PjSipAccount *)createAccount:(NSDictionary *)config {
     PjSipAccount *account = [PjSipAccount itemConfig:config];
     self.accounts[@(account.id)] = account;
+
+    NSLog(@"[XSIP] Created account ID: %d, for username: %@, domain: %@", account.id, account.username, account.domain);
     
     return account;
 }
 
 - (void)deleteAccount:(int) accountId {
-    // TODO: Destroy function ?
+    NSLog(@"[XSIP] Attempting to delete account: %d", accountId);
+
     if (self.accounts[@(accountId)] == nil) {
-        [NSException raise:@"Failed to delete account" format:@"Account with %@ id not found", @(accountId)];
+        NSLog(@"[XSIP] Account %d not found in self.accounts", accountId);
+        return;
+    }
+
+    if (pjsua_acc_is_valid(accountId)) {
+        NSLog(@"[XSIP] Account %d is valid. Unregistering...", accountId);
+
+        pj_status_t status1 = pjsua_acc_set_registration(accountId, PJ_FALSE);
+        NSLog(@"[XSIP] Unregister status for %d: %d", accountId, status1);
+
+        pj_thread_sleep(200);
+
+        pj_status_t status2 = pjsua_acc_del(accountId);
+        NSLog(@"[XSIP] Deletion status for %d: %d", accountId, status2);
+    } else {
+        NSLog(@"[XSIP] Account %d is NOT valid. Skipping unregister.", accountId);
     }
 
     [self.accounts removeObjectForKey:@(accountId)];
+    NSLog(@"[XSIP] Removed account %d from internal map", accountId);
 }
 
 - (PjSipAccount *) findAccount: (int) accountId {

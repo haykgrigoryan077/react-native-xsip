@@ -122,9 +122,12 @@
         pjsua_acc_id account_id;
 
         status = pjsua_acc_add(&cfg, PJ_TRUE, &account_id);
+        
         if (status != PJ_SUCCESS) {
             [NSException raise:@"Failed to create account" format:@"See device logs for more details."];
         }
+
+        NSLog(@"[XSIP] New account added: %d", account_id);
 
         self.id = account_id;
     }

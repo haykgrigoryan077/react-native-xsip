@@ -156,15 +156,14 @@
     pjsua_acc_get_info(self.id, &info);
 
     // Format registration status
-    BOOL isRegistered = info.status == PJSUA_REG_ACTIVE && info.expires > 0;
-
+    BOOL isRegistered = info.status == 200 && info.expires > 0;
+    
     NSDictionary *registration = @{
         @"status": @(info.status),
         @"statusText": [PjSipUtil toString:&info.status_text],
-        @"active": @(isRegistered),
-        @"expires": @(info.expires),
         @"statusTextLabel": [PjSipUtil toString:(pj_str_t *) pjsip_get_status_text(info.status)],
-        @"reason": [PjSipUtil toString:&info.reason]
+        @"active": @(isRegistered),
+        @"expires": @(info.expires)
     };
 
     return @{

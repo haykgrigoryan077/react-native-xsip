@@ -14,8 +14,6 @@
 
 @implementation PjSipEndpoint
 
-RCT_EXPORT_MODULE();
-
 + (instancetype) instance {
     static PjSipEndpoint *sharedInstance = nil;
     static dispatch_once_t onceToken;
@@ -212,11 +210,6 @@ RCT_EXPORT_MODULE();
     NSLog(@"[XSIP] Created account ID: %d, for username: %@, domain: %@", account.id, account.username, account.domain);
     
     return account;
-}
-
-- (void)setBridge:(RCTBridge *)bridge {
-    self.bridge = bridge;
-    NSLog(@"✅ [XSIP] Bridge has been set");
 }
 
 - (void)deleteAccount:(int)accountId {
